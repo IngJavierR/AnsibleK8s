@@ -1,0 +1,18 @@
+node_name: eblancanode
+cidr_v: 10.244.0.0/16
+
+packages:
+- kubeadm
+- kubectl
+
+services:
+- docker
+- kubelet
+- firewalld
+
+ports:
+- "6443/tcp"
+- "10250/tcp"
+- "10255/tcp"
+
+token_file: join_token

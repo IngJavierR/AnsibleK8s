@@ -1,0 +1,41 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+  - env_variables
+  tasks:
+  - name: Pulling images required for setting up a Kubernetes cluster
+    shell: kubeadm config images pull
+
+  - name: Resetting kubeadm
+    shell: kubeadm reset -f
+    register: output
+
+  - name: Initializing Kubernetes cluster
+    shell: kubeadm init --node-name {{node_name}} --pod-network-cidr={{ cidr_v }}
+    register: output
+
+  - name: Print kubeadm token
+    debug:
+      var: output.stdout
+
+  - name: Copying required files
+    shell: |
+     mkdir -p $HOME/.kube
+     sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+     sudo chown $(id -u):$(id -g) $HOME/.kube/config
+     sudo chown -R {{ ansible_user }} $HOME/.kube
+
+  - name: Getting Kubectl Version
+    shell: kubectl version | base64 | tr -d '\n'
+    register: kubectl_version
+
+  - name: Install Network Add-on
+    command: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout }}"
+  
+  - name: Sleep for 60 seconds and continue with play
+    wait_for: timeout=60
+
+  - name: Enable master as node
+    shell: |
+     kubectl taint nodes {{ node_name }} node-role.kubernetes.io/master-

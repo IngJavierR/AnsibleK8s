@@ -1,0 +1,8 @@
+[serversdev]
+estrellablancadev
+
+[serversqa]
+estrellablancaqa
+
+[serverstest]
+centos-linux.shared
